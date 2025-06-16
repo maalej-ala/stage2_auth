@@ -1,0 +1,145 @@
+<!-- dashbord.component.html -->
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary">Export</button>
+      <button class="btn btn-primary">+ New Report</button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div *ngFor="let stat of statsCards" class="stat-card" [ngClass]="stat.color">
+      <div class="stat-icon">
+        <i [class]="stat.icon"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stat.value }}</h3>
+        <p>{{ stat.title }}</p>
+        <div class="stat-change" [ngClass]="{'positive': stat.change > 0, 'negative': stat.change < 0}">
+          <i class="fas" [ngClass]="stat.change > 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+          {{ Math.abs(stat.change) }}%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <div class="chart-container">
+      <div class="chart-header">
+        <h2>Revenue Overview</h2>
+        <select class="chart-filter">
+          <option>Last 7 days</option>
+          <option>Last 30 days</option>
+          <option>Last 3 months</option>
+        </select>
+      </div>
+      <div class="chart-placeholder">
+        <svg viewBox="0 0 400 200" class="revenue-chart">
+          <defs>
+            <linearGradient id="revenueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+              <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
+            </linearGradient>
+          </defs>
+          <path d="M 0 180 L 50 160 L 100 140 L 150 120 L 200 100 L 250 80 L 300 90 L 350 70 L 400 60 L 400 200 L 0 200 Z" 
+                fill="url(#revenueGradient)" stroke="#3b82f6" stroke-width="2"/>
+          <path d="M 0 180 L 50 160 L 100 140 L 150 120 L 200 100 L 250 80 L 300 90 L 350 70 L 400 60" 
+                fill="none" stroke="#3b82f6" stroke-width="3"/>
+          <!-- Data points -->
+          <circle *ngFor="let point of chartPoints; let i = index" 
+                  [attr.cx]="point.x" 
+                  [attr.cy]="point.y" 
+                  r="4" 
+                  fill="#3b82f6" 
+                  class="chart-point"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="pie-chart-container">
+      <div class="chart-header">
+        <h2>Traffic Sources</h2>
+      </div>
+      <div class="pie-chart">
+        <svg viewBox="0 0 200 200" class="pie-svg">
+          <circle cx="100" cy="100" r="80" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
+          <circle cx="100" cy="100" r="80" fill="#10b981" stroke="#fff" stroke-width="2"
+                  stroke-dasharray="125.66 376.99" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+          <circle cx="100" cy="100" r="80" fill="#f59e0b" stroke="#fff" stroke-width="2"
+                  stroke-dasharray="62.83 439.82" stroke-dashoffset="-125.66" transform="rotate(-90 100 100)"/>
+          <circle cx="100" cy="100" r="80" fill="#ef4444" stroke="#fff" stroke-width="2"
+                  stroke-dasharray="94.25 408.41" stroke-dashoffset="-188.49" transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="pie-legend">
+          <div class="legend-item">
+            <span class="legend-color" style="background: #3b82f6;"></span>
+            <span>Direct (40%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #10b981;"></span>
+            <span>Search (25%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #f59e0b;"></span>
+            <span>Social (15%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #ef4444;"></span>
+            <span>Referral (20%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity & Quick Actions -->
+  <div class="bottom-section">
+    <div class="recent-activity">
+      <h2>Recent Activity</h2>
+      <div class="activity-list">
+        <div *ngFor="let activity of recentActivities" class="activity-item">
+          <div class="activity-avatar">
+            {{ activity.user.charAt(0).toUpperCase() }}
+          </div>
+          <div class="activity-content">
+            <p><strong>{{ activity.user }}</strong> {{ activity.action }}</p>
+            <span class="activity-time">{{ formatTime(activity.timestamp) }}</span>
+          </div>
+          <div class="activity-status" [ngClass]="activity.status">
+            <i class="fas" [ngClass]="{
+              'fa-check-circle': activity.status === 'success',
+              'fa-exclamation-triangle': activity.status === 'warning',
+              'fa-times-circle': activity.status === 'error'
+            }"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="actions-grid">
+        <button class="action-btn" (click)="createUser()">
+          <i class="fas fa-user-plus"></i>
+          <span>Add User</span>
+        </button>
+        <button class="action-btn" (click)="generateReport()">
+          <i class="fas fa-chart-line"></i>
+          <span>Generate Report</span>
+        </button>
+        <button class="action-btn" (click)="exportData()">
+          <i class="fas fa-download"></i>
+          <span>Export Data</span>
+        </button>
+        <button class="action-btn" (click)="openSettings()">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
