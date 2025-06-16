@@ -55,8 +55,6 @@ constructor(
 ) {
     // Check token validity on service initialization
     this.checkTokenValidity();
-    // Periodically check token validity (e.g., every 30 seconds)
-    setInterval(() => this.checkTokenValidity(), 30 * 1000);
 }
 
   /**
