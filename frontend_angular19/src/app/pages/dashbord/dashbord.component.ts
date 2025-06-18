@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { CreateUserRequest,AuthService } from '../../services/auth.service';
 
 interface StatCard {
   title: string;
@@ -29,6 +30,8 @@ interface RecentActivity {
   styleUrls: ['./dashbord.component.css']
 })
 export class DashbordComponent implements OnInit {
+  constructor(private authService: AuthService) {}
+
 
   Math = Math;
 
@@ -121,9 +124,24 @@ export class DashbordComponent implements OnInit {
     return `${Math.floor(minutes / 1440)}d ago`;
   }
 
-  createUser(): void {
-    console.log('Creating new user...');
+createUser(): void {
+    const newUser: CreateUserRequest = {
+      firstName: 'Ala',
+      lastName: 'Maalej',
+      email: 'ala.doctor@example.com',
+      password: 'Secure123!',
+      role: 'DOCTOR'
+    };
+
+    this.authService.createUser(newUser).subscribe({
+      next: (res) => console.log('User created:', res),
+      error: (err) => {
+        console.error('Error creating user:', err.message);
+        // No need to call logout here; AuthService handles it
+      }
+    });
   }
+
 
   generateReport(): void {
     console.log('Generating report...');
