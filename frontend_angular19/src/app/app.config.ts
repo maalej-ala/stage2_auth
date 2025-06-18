@@ -5,7 +5,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { routes } from './app.routes';
-import { authInterceptor } from './services/auth.interceptor';
+import { AuthInterceptor } from './services/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,7 +15,7 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(BrowserModule, ReactiveFormsModule),
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: authInterceptor,
+      useClass: AuthInterceptor,
       multi: true
     }
   ]

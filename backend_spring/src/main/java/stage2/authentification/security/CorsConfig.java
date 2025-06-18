@@ -17,6 +17,7 @@ public class CorsConfig {
                         .allowedOrigins("*") // Remplacez par votre frontend ex: http://localhost:4200
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*");
+                
             }
         };
     }
