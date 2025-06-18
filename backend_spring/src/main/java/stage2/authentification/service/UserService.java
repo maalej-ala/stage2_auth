@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import stage2.authentification.controller.UserController.CreateUserRequest;
 import stage2.authentification.controller.UserController.LoginRequest;
 import stage2.authentification.controller.UserController.SignupRequest;
 import stage2.authentification.entity.User;
@@ -19,6 +20,7 @@ import stage2.authentification.security.JwtUtil;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -68,6 +70,7 @@ public class UserService {
         }
 
         User user = new User();
+        user.setId(UUID.randomUUID().toString());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
@@ -76,10 +79,9 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // Load UserDetails for token generation
         UserDetails userDetails = userDetailsService.loadUserByUsername(savedUser.getEmail());
         String accessToken = jwtUtil.generateToken(userDetails);
-        String refreshToken = jwtUtil.generateRefreshToken(userDetails);
+        String refreshToken = jwtUtil.generateRefreshToken(userDetails); // New refresh token with 7-day expiration
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", accessToken);
@@ -101,9 +103,8 @@ public class UserService {
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String accessToken = jwtUtil.generateToken(userDetails);
-            String refreshToken = jwtUtil.generateRefreshToken(userDetails);
+            String refreshToken = jwtUtil.generateRefreshToken(userDetails); // New refresh token with 7-day expiration
 
-            // Fetch user details from database
             User user = findByEmail(loginRequest.getEmail());
 
             Map<String, Object> response = new HashMap<>();
@@ -127,9 +128,8 @@ public class UserService {
 
             if (jwtUtil.validateToken(refreshToken, userDetails)) {
                 String newAccessToken = jwtUtil.generateToken(userDetails);
-                String newRefreshToken = jwtUtil.generateRefreshToken(userDetails); // Issue new refresh token
+                String newRefreshToken = jwtUtil.generateRefreshToken(userDetails); // New refresh token with 7-day expiration
 
-                // Fetch user details from database
                 User user = findByEmail(username);
 
                 Map<String, Object> response = new HashMap<>();
@@ -138,12 +138,55 @@ public class UserService {
                 response.put("user", createUserResponse(user));
                 response.put("expiresIn", 900); // 15 minutes
 
+                System.out.println("Refresh response: " + response); // DEBUG
                 return response;
             } else {
                 throw new BadCredentialsException("Token de rafraîchissement invalide ou expiré");
             }
         } catch (Exception e) {
+            System.out.println("Refresh error: " + e.getMessage()); // DEBUG
             throw new BadCredentialsException("Erreur lors du rafraîchissement du token: " + e.getMessage());
+        }
+    }
+
+    public Map<String, Object> createUser(CreateUserRequest request, String authToken) {
+        try {
+            String username = jwtUtil.extractUsername(authToken);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            if (!jwtUtil.validateToken(authToken, userDetails)) {
+                throw new BadCredentialsException("Invalid or expired token");
+            }
+
+            // Create new user
+            if (existsByEmail(request.getEmail())) {
+                throw new IllegalArgumentException("Email déjà utilisé");
+            }
+
+            User user = new User();
+            user.setId(UUID.randomUUID().toString());
+            user.setFirstName(request.getFirstName());
+            user.setLastName(request.getLastName());
+            user.setEmail(request.getEmail());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setRole(request.getRole());
+
+            User savedUser = userRepository.save(user);
+
+            // Generate new tokens for the requesting user
+            String newAccessToken = jwtUtil.generateToken(userDetails);
+            String newRefreshToken = jwtUtil.generateRefreshToken(userDetails); // New refresh token with 7-day expiration
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "User created successfully");
+            response.put("user", createUserResponse(savedUser));
+            response.put("token", newAccessToken);
+            response.put("refreshToken", newRefreshToken);
+            response.put("expiresIn", 900); // 15 minutes
+
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la création de l'utilisateur: " + e.getMessage());
         }
     }
 }
