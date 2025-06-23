@@ -1,0 +1,27 @@
+# Ignore Node.js/angular files (frontend)
+**/node_modules/
+**/dist/
+**/.angular/
+**/.cache/
+**/.vscode/
+**/.idea/
+**/.git/
+**/.github/
+**/npm-debug.log
+**/yarn-error.log
+
+# Ignore Maven/Java files (backend)
+**/target/
+**/.mvn/wrapper/
+**/*.iml
+**/*.log
+**/logs/
+
+# General ignores
+**/.DS_Store
+**/Thumbs.db
+**/.env
+**/.env.local
+**/docker-compose.override.yml
+**/README.md
+**/LICENSE

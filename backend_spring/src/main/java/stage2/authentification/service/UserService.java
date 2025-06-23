@@ -70,7 +70,6 @@ public class UserService {
         }
 
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
@@ -164,7 +163,6 @@ public class UserService {
             }
 
             User user = new User();
-            user.setId(UUID.randomUUID().toString());
             user.setFirstName(request.getFirstName());
             user.setLastName(request.getLastName());
             user.setEmail(request.getEmail());
