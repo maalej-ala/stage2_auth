@@ -112,7 +112,13 @@ export class DashbordComponent implements OnInit {
   ngOnInit(): void {
     // Initialize component
   }
-
+onNewReport() {
+    // Call logout from AuthService
+    this.authService.logout();
+    
+    // Optional: Redirect to login or home page
+    // Example: this.router.navigate(['/login']);
+  }
   formatTime(timestamp: Date): string {
     const now = new Date();
     const diff = now.getTime() - timestamp.getTime();
