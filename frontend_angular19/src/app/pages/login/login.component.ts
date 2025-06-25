@@ -89,7 +89,7 @@ export class LoginComponent implements OnInit {
     const queryParams = email ? { email } : {};
     
     // Navigate to forgot password page
-    this.router.navigate(['/forgot-password'], { queryParams });
+    this.router.navigate(['/register'], { queryParams });
   }
 
   onSignupRedirect(event: Event) {

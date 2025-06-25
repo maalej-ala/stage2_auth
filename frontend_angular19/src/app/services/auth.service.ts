@@ -33,7 +33,7 @@ export interface User {
   role?: string;
 }
 
-export interface CreateUserRequest {
+export interface UserCreateRequest {
   firstName: string;
   lastName: string;
   email: string;
@@ -115,7 +115,7 @@ export class AuthService {
   /**
    * Create user (for testing)
    */
-  createUser(userData: CreateUserRequest): Observable<any> {
+  createUser(userData: UserCreateRequest): Observable<any> {
     return this.ensureValidToken().pipe(
       switchMap(() => {
         const token = this.getToken();
@@ -209,9 +209,9 @@ export class AuthService {
     this.currentUserSubject.next(response.user);
     this.isAuthenticatedSubject.next(true);
 
-    if (response.expiresIn) {
-      this.scheduleTokenRefresh(response.expiresIn);
-    }
+    // if (response.expiresIn) {
+    //   this.scheduleTokenRefresh(response.expiresIn);
+    // }
   }
 
   private saveToken(token: string): void {
@@ -257,34 +257,34 @@ export class AuthService {
     }
   }
 
-  private scheduleTokenRefresh(expiresIn: number): void {
-    // Refresh token 30 seconds before expiration
-    const refreshTime = (expiresIn - 30) * 1000;
-    setTimeout(() => {
-      if (this.isAuthenticated()) {
-        this.refreshToken().subscribe({
-          error: () => this.logout()
-        });
-      }
-    }, refreshTime);
-  }
+  // private scheduleTokenRefresh(expiresIn: number): void {
+  //   // Refresh token 30 seconds before expiration
+  //   const refreshTime = (expiresIn - 30) * 1000;
+  //   setTimeout(() => {
+  //     if (this.isAuthenticated()) {
+  //       this.refreshToken().subscribe({
+  //         error: () => this.logout()
+  //       });
+  //     }
+  //   }, refreshTime);
+  // }
 
-  updateToken(token: string): void {
-    this.saveToken(token);
-    const decoded = this.decodeToken(token);
-    if (decoded?.exp) {
-      const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
-      this.scheduleTokenRefresh(expiresIn);
-    }
-  }
+  // updateToken(token: string): void {
+  //   this.saveToken(token);
+  //   const decoded = this.decodeToken(token);
+  //   if (decoded?.exp) {
+  //     const expiresIn = decoded.exp - Math.floor(Date.now() / 1000);
+  //     this.scheduleTokenRefresh(expiresIn);
+  //   }
+  // }
 
-  private decodeToken(token: string): any {
-    try {
-      return JSON.parse(atob(token.split('.')[1]));
-    } catch {
-      return null;
-    }
-  }
+  // private decodeToken(token: string): any {
+  //   try {
+  //     return JSON.parse(atob(token.split('.')[1]));
+  //   } catch {
+  //     return null;
+  //   }
+  // }
 
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'An error occurred';

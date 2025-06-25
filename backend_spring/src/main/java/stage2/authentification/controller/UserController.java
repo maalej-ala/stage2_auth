@@ -3,15 +3,12 @@ package stage2.authentification.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import stage2.authentification.dto.AuthResponse;
 import stage2.authentification.entity.User;
 import stage2.authentification.security.JwtUtil;
 import stage2.authentification.service.UserService;
@@ -27,8 +24,6 @@ public class UserController {
     private JwtUtil jwtUtil;
     @Autowired
     private UserService userService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -121,7 +116,7 @@ public class UserController {
     public ResponseEntity<?> refresh(@RequestBody Map<String, String> payload) {
         try {
             String refreshToken = payload.get("token");
-            Map<String, Object> response = userService.refreshToken(refreshToken);
+            AuthResponse response = userService.refreshToken(refreshToken);
             return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", e.getMessage()));

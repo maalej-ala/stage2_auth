@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { CreateUserRequest,AuthService } from '../../services/auth.service';
+import { UserCreateRequest,AuthService } from '../../services/auth.service';
 
 interface StatCard {
   title: string;
@@ -125,7 +125,7 @@ export class DashbordComponent implements OnInit {
   }
 
 createUser(): void {
-    const newUser: CreateUserRequest = {
+    const newUser: UserCreateRequest = {
       firstName: 'Ala',
       lastName: 'Maalej',
       email: 'ala.doctor@example.com',
