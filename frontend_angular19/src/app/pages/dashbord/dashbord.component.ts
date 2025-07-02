@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { UserCreateRequest,AuthService } from '../../services/auth.service';
 
 interface StatCard {
@@ -29,8 +29,9 @@ interface RecentActivity {
   templateUrl: './dashbord.component.html',
   styleUrls: ['./dashbord.component.css']
 })
-export class DashbordComponent implements OnInit {
-  constructor(private authService: AuthService) {}
+export class DashbordComponent {
+    private authService = inject(AuthService);
+
 
 
   Math = Math;
@@ -109,9 +110,6 @@ export class DashbordComponent implements OnInit {
     }
   ];
 
-  ngOnInit(): void {
-    // Initialize component
-  }
 onNewReport() {
     // Call logout from AuthService
     this.authService.logout();
