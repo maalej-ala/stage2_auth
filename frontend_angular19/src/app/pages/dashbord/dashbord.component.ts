@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { UserCreateRequest,AuthService } from '../../services/auth.service';
 
 interface StatCard {
   title: string;
@@ -29,6 +30,8 @@ interface RecentActivity {
   styleUrls: ['./dashbord.component.css']
 })
 export class DashbordComponent implements OnInit {
+  constructor(private authService: AuthService) {}
+
 
   Math = Math;
 
@@ -109,7 +112,13 @@ export class DashbordComponent implements OnInit {
   ngOnInit(): void {
     // Initialize component
   }
-
+onNewReport() {
+    // Call logout from AuthService
+    this.authService.logout();
+    
+    // Optional: Redirect to login or home page
+    // Example: this.router.navigate(['/login']);
+  }
   formatTime(timestamp: Date): string {
     const now = new Date();
     const diff = now.getTime() - timestamp.getTime();
@@ -121,9 +130,24 @@ export class DashbordComponent implements OnInit {
     return `${Math.floor(minutes / 1440)}d ago`;
   }
 
-  createUser(): void {
-    console.log('Creating new user...');
+createUser(): void {
+    const newUser: UserCreateRequest = {
+      firstName: 'Ala',
+      lastName: 'Maalej',
+      email: 'ala.doctor@example.com',
+      password: 'Secure123!',
+      role: 'DOCTOR'
+    };
+
+    this.authService.createUser(newUser).subscribe({
+      next: (res) => console.log('User created:', res),
+      error: (err) => {
+        console.error('Error creating user:', err.message);
+        // No need to call logout here; AuthService handles it
+      }
+    });
   }
+
 
   generateReport(): void {
     console.log('Generating report...');

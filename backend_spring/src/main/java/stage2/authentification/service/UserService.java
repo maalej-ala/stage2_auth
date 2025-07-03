@@ -10,18 +10,22 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import stage2.authentification.controller.UserController.CreateUserRequest;
 import stage2.authentification.controller.UserController.LoginRequest;
 import stage2.authentification.controller.UserController.SignupRequest;
+import stage2.authentification.dto.AuthResponse;
+import stage2.authentification.dto.UserDto;
+import stage2.authentification.dto.UserResponse;
 import stage2.authentification.entity.User;
 import stage2.authentification.repository.UserRepository;
 import stage2.authentification.security.JwtUtil;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class UserService {
+
+    private static final int TOKEN_EXPIRATION = 900;
 
     @Autowired
     private UserRepository userRepository;
@@ -34,6 +38,9 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -48,74 +55,112 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable avec l'email : " + email));
     }
 
-    public Map<String, Object> register(final SignupRequest request) {
+    private UserDto createUserDto(User user) {
+        return new UserDto(
+            user.getId(),
+            user.getEmail(),
+            user.getFirstName(),
+            user.getLastName(),
+            user.getRole()
+        );
+    }
+
+    public AuthResponse register(final SignupRequest request) {
         if (existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email déjà utilisé");
         }
 
-        User user = new User();
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole("USER");
+        User user = new User(request.getFirstName(),request.getLastName(),request.getEmail(),passwordEncoder.encode(request.getPassword()),"USER");
 
         User savedUser = userRepository.save(user);
 
-        Map<String, Object> userResponse = new HashMap<>();
-        userResponse.put("id", savedUser.getId());
-        userResponse.put("email", savedUser.getEmail());
-        userResponse.put("firstName", savedUser.getFirstName());
-        userResponse.put("lastName", savedUser.getLastName());
-        userResponse.put("role", savedUser.getRole());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(savedUser.getEmail());
+        String accessToken = jwtUtil.generateToken(userDetails);
+        String refreshToken = jwtUtil.generateRefreshToken(userDetails);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("user", userResponse);
-        response.put("expiresIn", 36000); // en secondes
-        return response;
-    }
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    public Map<String, Object> refreshToken(String refreshToken) {
-        String username = jwtUtil.extractUsername(refreshToken);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-        if (jwtUtil.validateToken(refreshToken, userDetails)) {
-            String newAccessToken = jwtUtil.generateToken(userDetails);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", newAccessToken);
-            response.put("expiresIn", 900); // 15 minutes
-            return response;
-        } else {
-            throw new BadCredentialsException("Token invalide ou expiré");
-        }
+        return new AuthResponse(
+            accessToken,
+            refreshToken,
+            createUserDto(savedUser),
+            TOKEN_EXPIRATION
+        );
     }
 
-
-    
-    public Map<String, Object> login(LoginRequest loginRequest) {
+    public AuthResponse login(LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getEmail(),
-                            loginRequest.getPassword()
-                    )
+                new UsernamePasswordAuthenticationToken(
+                    loginRequest.getEmail(),
+                    loginRequest.getPassword()
+                )
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String accessToken = jwtUtil.generateToken(userDetails);
             String refreshToken = jwtUtil.generateRefreshToken(userDetails);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", accessToken);
-            response.put("refreshToken", refreshToken);
-            response.put("expiresIn", 900); // 15 min
+            User user = findByEmail(loginRequest.getEmail());
 
-            return response;
+            return new AuthResponse(
+                accessToken,
+                refreshToken,
+                createUserDto(user),
+                TOKEN_EXPIRATION
+            );
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Identifiants invalides");
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de l'authentification: " + e.getMessage());
         }
+    }
+
+    public AuthResponse refreshToken(String refreshToken) {
+        try {
+            String username = jwtUtil.extractUsername(refreshToken);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            if (!jwtUtil.validateToken(refreshToken, userDetails)) {
+                throw new BadCredentialsException("Token de rafraîchissement invalide ou expiré");
+            }
+
+            String newAccessToken = jwtUtil.generateToken(userDetails);
+            String newRefreshToken = jwtUtil.generateRefreshToken(userDetails);
+            User user = findByEmail(username);
+
+            return new AuthResponse(
+                newAccessToken,
+                newRefreshToken,
+                createUserDto(user),
+                TOKEN_EXPIRATION
+            );
+        } catch (Exception e) {
+            throw new BadCredentialsException("Erreur lors du rafraîchissement du token: " + e.getMessage());
+        }
+    }
+
+    public UserResponse createUser(CreateUserRequest request, String authToken) {
+        String username = jwtUtil.extractUsername(authToken);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        if (!jwtUtil.validateToken(authToken, userDetails)) {
+            throw new BadCredentialsException("Invalid or expired token");
+        }
+
+        if (existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email déjà utilisé");
+        }
+
+        User user = new User(request.getFirstName(),request.getLastName(),request.getEmail(),passwordEncoder.encode(request.getPassword()),request.getRole());
+        User savedUser = userRepository.save(user);
+        String newAccessToken = jwtUtil.generateToken(userDetails);
+        String newRefreshToken = jwtUtil.generateRefreshToken(userDetails);
+
+        return new UserResponse(
+            "User created successfully",
+            createUserDto(savedUser),
+            newAccessToken,
+            newRefreshToken,
+            TOKEN_EXPIRATION
+        );
     }
 }
