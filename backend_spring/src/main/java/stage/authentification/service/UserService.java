@@ -1,6 +1,5 @@
 package stage.authentification.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -9,14 +8,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import stage.authentification.controller.UserController.CreateUserRequest;
-import stage.authentification.controller.UserController.LoginRequest;
-import stage.authentification.controller.UserController.SignupRequest;
 import stage.authentification.dto.AuthResponse;
 import stage.authentification.dto.UserDto;
 import stage.authentification.dto.UserResponse;
 import stage.authentification.entity.User;
+import stage.authentification.exception.AuthenticationException;
 import stage.authentification.repository.UserRepository;
 import stage.authentification.security.JwtUtil;
 
@@ -27,20 +23,26 @@ public class UserService {
 
     private static final int TOKEN_EXPIRATION = 900;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private UserDetailsService userDetailsService;
+    // ✅ Constructor Injection
+    public UserService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager,
+            JwtUtil jwtUtil,
+            UserDetailsService userDetailsService
+    ) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
+    }
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -65,12 +67,18 @@ public class UserService {
         );
     }
 
-    public AuthResponse register(final SignupRequest request) {
+    public AuthResponse register(final User request) {
         if (existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email déjà utilisé");
         }
 
-        User user = new User(request.getFirstName(),request.getLastName(),request.getEmail(),passwordEncoder.encode(request.getPassword()),"USER");
+        User user = new User(
+            request.getFirstName(),
+            request.getLastName(),
+            request.getEmail(),
+            passwordEncoder.encode(request.getPassword()),
+            "USER"
+        );
 
         User savedUser = userRepository.save(user);
 
@@ -86,7 +94,7 @@ public class UserService {
         );
     }
 
-    public AuthResponse login(LoginRequest loginRequest) {
+     public AuthResponse login(User loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -110,7 +118,7 @@ public class UserService {
         } catch (BadCredentialsException e) {
             throw new BadCredentialsException("Identifiants invalides");
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de l'authentification: " + e.getMessage());
+            throw new AuthenticationException("Erreur lors de l'authentification", e);
         }
     }
 
@@ -119,7 +127,8 @@ public class UserService {
             String username = jwtUtil.extractUsername(refreshToken);
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-            if (!jwtUtil.validateToken(refreshToken, userDetails)) {
+            boolean isValid = jwtUtil.validateToken(refreshToken, userDetails);
+            if (!isValid) {
                 throw new BadCredentialsException("Token de rafraîchissement invalide ou expiré");
             }
 
@@ -133,24 +142,35 @@ public class UserService {
                 createUserDto(user),
                 TOKEN_EXPIRATION
             );
+        } catch (BadCredentialsException e) {
+            throw e; // still meaningful
         } catch (Exception e) {
-            throw new BadCredentialsException("Erreur lors du rafraîchissement du token: " + e.getMessage());
+            throw new AuthenticationException("Erreur lors du rafraîchissement du token", e);
         }
     }
 
-    public UserResponse createUser(CreateUserRequest request, String authToken) {
+    public UserResponse createUser(User request, String authToken) {
         String username = jwtUtil.extractUsername(authToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        if (!jwtUtil.validateToken(authToken, userDetails)) {
+        boolean isValid = jwtUtil.validateToken(authToken, userDetails);
+        if (!isValid) {
             throw new BadCredentialsException("Invalid or expired token");
         }
+
 
         if (existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email déjà utilisé");
         }
 
-        User user = new User(request.getFirstName(),request.getLastName(),request.getEmail(),passwordEncoder.encode(request.getPassword()),request.getRole());
+        User user = new User(
+            request.getFirstName(),
+            request.getLastName(),
+            request.getEmail(),
+            passwordEncoder.encode(request.getPassword()),
+            request.getRole()
+        );
+
         User savedUser = userRepository.save(user);
         String newAccessToken = jwtUtil.generateToken(userDetails);
         String newRefreshToken = jwtUtil.generateRefreshToken(userDetails);

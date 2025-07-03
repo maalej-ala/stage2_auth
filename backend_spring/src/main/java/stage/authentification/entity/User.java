@@ -26,15 +26,6 @@ public class User {
     private String role; // <-- Ajout du champ role
 
     public User() {}
-
-    public User(Long id, String firstName, String lastName, String email, String password, String role) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-    }
     public User(String firstName, String lastName, String email, String password, String role) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -42,6 +33,12 @@ public class User {
         this.password = password;
         this.role = role;
     }
+    public User(Long id, String firstName, String lastName, String email, String password, String role) {
+        this(firstName,lastName,email,password,role);
+
+    	this.id = id;
+    }
+
 
     // Getters and Setters
     public Long getId() { return id; }

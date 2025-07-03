@@ -17,10 +17,10 @@ import javax.crypto.SecretKey;
 @Component
 public class JwtUtil {
 
-	private final String SECRET_KEY = "your_secret_key_your_secret_key_123456"; // should be at least 256 bits
+	private  static final String SECRETKEY = "your_secret_key_your_secret_key_123456"; // should be at least 256 bits
 
 	private SecretKey getSigningKey() {
-	    byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+	    byte[] keyBytes = SECRETKEY.getBytes(StandardCharsets.UTF_8);
 	    return Keys.hmacShaKeyFor(keyBytes);
 	}
 

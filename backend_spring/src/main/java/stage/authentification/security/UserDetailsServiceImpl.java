@@ -15,9 +15,13 @@ import stage.authentification.repository.UserRepository;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
+    
+    private final UserRepository userRepository;
     @Autowired
-    private UserRepository userRepository;
-
+	public UserDetailsServiceImpl(UserRepository userRepository) {
+		super();
+		this.userRepository = userRepository;
+	}
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
@@ -29,4 +33,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             
             .build();
     }
+
 }

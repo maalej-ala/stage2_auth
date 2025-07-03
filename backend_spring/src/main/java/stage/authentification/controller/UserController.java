@@ -35,7 +35,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Object> registerUser(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<Object> registerUser(@RequestBody User signupRequest) {
         try {
             return ResponseEntity.ok(userService.register(signupRequest));
         } catch (IllegalArgumentException e) {
@@ -46,34 +46,11 @@ public class UserController {
         }
     }
 
-    public static class CreateUserRequest {
-        private String firstName;
-        private String lastName;
-        private String email;
-        private String password;
-        private String role;
-
-        // Getters and setters
-        public String getFirstName() { return firstName; }
-        public void setFirstName(String firstName) { this.firstName = firstName; }
-
-        public String getLastName() { return lastName; }
-        public void setLastName(String lastName) { this.lastName = lastName; }
-
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-
-        public String getRole() { return role; }
-        public void setRole(String role) { this.role = role; }
-    }
-
+   
     @PostMapping("/create")
     public ResponseEntity<Object> createUser(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody CreateUserRequest request) {
+            @RequestBody User request) {
         try {
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -102,7 +79,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<Object> login(@RequestBody User loginRequest) {
         try {
             return ResponseEntity.ok(userService.login(loginRequest));
         } catch (BadCredentialsException e) {
@@ -134,40 +111,7 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    public static class SignupRequest {
-        private String firstName;
-        private String lastName;
-        private String email;
-        private String password;
 
-        public SignupRequest(String firstName, String lastName, String email, String password) {
-            this.firstName = firstName;
-            this.lastName = lastName;
-            this.email = email;
-            this.password = password;
-        }
 
-        public String getFirstName() { return firstName; }
-        public void setFirstName(String firstName) { this.firstName = firstName; }
-
-        public String getLastName() { return lastName; }
-        public void setLastName(String lastName) { this.lastName = lastName; }
-
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-    }
-
-    public static class LoginRequest {
-        private String email;
-        private String password;
-
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-    }
+   
 }

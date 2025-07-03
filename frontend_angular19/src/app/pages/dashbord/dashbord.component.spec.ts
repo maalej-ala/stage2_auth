@@ -24,4 +24,11 @@ describe('DashbordComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+  it('should call console.log when generateReport is called', () => {
+    spyOn(console, 'log');
+
+    component.generateReport();
+
+    expect(console.log).toHaveBeenCalledWith('Generating report...');
+  });
 });

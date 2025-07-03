@@ -8,6 +8,7 @@ class AuthentificationApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Ensures Spring context loads without issues
 	}
 
 }
