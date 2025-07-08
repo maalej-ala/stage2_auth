@@ -17,6 +17,7 @@ import stage.authentification.repository.UserRepository;
 import stage.authentification.security.JwtUtil;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -182,5 +183,33 @@ public class UserService {
             newRefreshToken,
             TOKEN_EXPIRATION
         );
+    }
+    
+    public User updateUser(Long id, User updateRequest) {
+        Optional<User> existingUser = userRepository.findById(id);
+        if (existingUser.isEmpty()) {
+            throw new IllegalArgumentException("Utilisateur introuvable avec l'ID : " + id);
+        }
+
+        User user = existingUser.get();
+        user.setFirstName(updateRequest.getFirstName());
+        user.setLastName(updateRequest.getLastName());
+        user.setEmail(updateRequest.getEmail());
+
+        if (updateRequest.getPassword() != null && !updateRequest.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(updateRequest.getPassword()));
+        }
+
+        user.setRole(updateRequest.getRole() != null ? updateRequest.getRole() : "USER");
+
+        return userRepository.save(user);
+    }
+
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new IllegalArgumentException("Utilisateur introuvable avec l'ID : " + id);
+        }
+
+        userRepository.deleteById(id);
     }
 }

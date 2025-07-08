@@ -12,7 +12,7 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
-   private fb = inject(FormBuilder);
+  private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
@@ -31,7 +31,12 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     // Check if user is already authenticated
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
+      // Redirect based on role
+      if (this.authService.hasRole('ADMIN')) {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
       return;
     }
 
@@ -62,9 +67,13 @@ export class LoginComponent implements OnInit {
         next: (response) => {
           console.log('Login successful!', response);
           
-          // Navigate to dashboard or intended route
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-          this.router.navigate([returnUrl]);
+          // Navigate based on role
+          if (this.authService.hasRole('ADMIN')) {
+            this.router.navigate(['/admin']);
+          } else {
+            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+            this.router.navigate([returnUrl]);
+          }
           
           this.isLoading = false;
         },

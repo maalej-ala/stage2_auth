@@ -1,3 +1,4 @@
+// UserController.java
 package stage.authentification.controller;
 
 import org.springframework.http.HttpStatus;
@@ -46,7 +47,6 @@ public class UserController {
         }
     }
 
-   
     @PostMapping("/create")
     public ResponseEntity<Object> createUser(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
@@ -107,11 +107,92 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<User>> getAllUsers(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(null);
+            }
+
+            String token = authHeader.replace("Bearer ", "");
+            String username = jwtUtil.extractUsername(token);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            boolean isValidToken = jwtUtil.validateToken(token, userDetails);
+            if (!isValidToken) {
+                throw new BadCredentialsException("Invalid or expired token");
+            }
+
+            return ResponseEntity.ok(userService.getAllUsers());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(null);
+        }
     }
 
+    @PutMapping("/users/{id}")
+    public ResponseEntity<Object> updateUser(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Long id,
+            @RequestBody User updateRequest) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of(MESSAGE_KEY, INVALID_AUTH_HEADER));
+            }
 
+            String token = authHeader.replace("Bearer ", "");
+            String username = jwtUtil.extractUsername(token);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-   
+            boolean isValidToken = jwtUtil.validateToken(token, userDetails);
+            if (!isValidToken) {
+                throw new BadCredentialsException("Invalid or expired token");
+            }
+
+            User updatedUser = userService.updateUser(id, updateRequest);
+            Map<String, Object> response = new HashMap<>();
+            response.put(MESSAGE_KEY, "User updated successfully");
+            response.put("user", updatedUser);
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(MESSAGE_KEY, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(MESSAGE_KEY, SERVER_ERROR_MESSAGE));
+        }
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Object> deleteUser(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Long id) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of(MESSAGE_KEY, INVALID_AUTH_HEADER));
+            }
+
+            String token = authHeader.replace("Bearer ", "");
+            String username = jwtUtil.extractUsername(token);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            boolean isValidToken = jwtUtil.validateToken(token, userDetails);
+            if (!isValidToken) {
+                throw new BadCredentialsException("Invalid or expired token");
+            }
+
+            userService.deleteUser(id);
+            return ResponseEntity.ok(Map.of(MESSAGE_KEY, "User deleted successfully"));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(MESSAGE_KEY, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(MESSAGE_KEY, SERVER_ERROR_MESSAGE));
+        }
+    }
 }

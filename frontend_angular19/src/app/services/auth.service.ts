@@ -70,7 +70,52 @@ constructor() {
   this.checkTokenValidity();
 }
 
+getAllUsers(): Observable<User[]> {
+    return this.ensureValidToken().pipe(
+      switchMap(() => {
+        const token = this.getToken();
+        const headers = token
+          ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+          : new HttpHeaders();
 
+        return this.http.get<User[]>(`${this.API_URL}/users`, { headers }).pipe(
+          catchError(this.handleError)
+        );
+      })
+    );
+  }
+  // auth.service.ts
+// Add these methods to the existing AuthService class
+
+updateUser(userData: User): Observable<any> {
+  return this.ensureValidToken().pipe(
+    switchMap(() => {
+      const token = this.getToken();
+      const headers = token
+        ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+        : new HttpHeaders();
+
+      return this.http.put(`${this.API_URL}/users/${userData.id}`, userData, { headers }).pipe(
+        catchError(this.handleError)
+      );
+    })
+  );
+}
+
+deleteUser(userId: string): Observable<any> {
+  return this.ensureValidToken().pipe(
+    switchMap(() => {
+      const token = this.getToken();
+      const headers = token
+        ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+        : new HttpHeaders();
+
+      return this.http.delete(`${this.API_URL}/users/${userId}`, { headers }).pipe(
+        catchError(this.handleError)
+      );
+    })
+  );
+}
   /**
    * Check token validity and refresh if needed before making a request
    */
