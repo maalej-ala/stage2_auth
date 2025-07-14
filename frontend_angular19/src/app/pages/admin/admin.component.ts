@@ -41,36 +41,46 @@ export class AdminComponent implements OnInit {
   startEditing(user: User): void {
     this.editingUser = { ...user };
   }
-
-  saveUserChanges(): void {
+logout(){
+      this.authService.logout();
+}
+// admin.component.ts
+saveUserChanges(): void {
     if (!this.editingUser) return;
 
-    // Prepare the user data for update (assuming you have an update endpoint)
     const updatedUser: User = {
-      id: this.editingUser.id,
-      firstName: this.editingUser.firstName,
-      lastName: this.editingUser.lastName,
-      email: this.editingUser.email,
-      role: this.editingUser.role as 'USER' | 'ADMIN' | 'DOCTOR' // Ensure role is one of the allowed values
+        id: this.editingUser.id,
+        firstName: this.editingUser.firstName,
+        lastName: this.editingUser.lastName,
+        email: this.editingUser.email,
+        role: this.editingUser.role as 'USER' | 'ADMIN' | 'DOCTOR',
+        active: this.editingUser.active
     };
 
-    // Note: You'll need an updateUser method in AuthService
     this.authService.updateUser(updatedUser).subscribe({
-      next: () => {
-        // Update local users array
-        const index = this.users.findIndex(u => u.id === this.editingUser!.id);
-        if (index !== -1) {
-          this.users[index] = { ...this.editingUser! };
+        next: (response: any) => {
+            // Assuming the response contains the updated user in response.user
+            const updatedUserFromServer = response.user;
+            const index = this.users.findIndex(u => u.id === this.editingUser!.id);
+            if (index !== -1) {
+                this.users[index] = {
+                    id: updatedUserFromServer.id,
+                    firstName: updatedUserFromServer.firstName,
+                    lastName: updatedUserFromServer.lastName,
+                    email: updatedUserFromServer.email,
+                    role: updatedUserFromServer.role || 'USER',
+                    active: updatedUserFromServer.active // ✅ Update with server response
+                };
+            }
+            this.editingUser = null;
+            alert('User updated successfully');
+        },
+        error: (err) => {
+            console.error('Failed to update user:', err);
+            alert('Error updating user: ' + err.message);
         }
-        this.editingUser = null;
-        alert('User updated successfully');
-      },
-      error: (err) => {
-        console.error('Failed to update user:', err);
-        alert('Error updating user: ' + err.message);
-      }
     });
-  }
+}
 
   cancelEditing(): void {
     this.editingUser = null;

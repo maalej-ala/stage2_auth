@@ -79,8 +79,12 @@ export class LoginComponent implements OnInit {
         },
         error: (error) => {
           console.error('Login failed:', error);
-          this.errorMessage = error.message || 'Login failed. Please try again.';
-          this.isLoading = false;
+
+if (error.message.includes('Votre compte est désactivé')) {
+                    this.errorMessage = 'Votre compte est désactivé. Veuillez contacter l\'administrateur.';
+                } else {
+                    this.errorMessage = error.message || 'Identifiants incorrects. Veuillez réessayer.';
+                }
         }
       });
     } else {

@@ -9,6 +9,6 @@ export const routes: Routes = [
   { path: 'register', component: SignupComponent },
    { path: 'dashboard', component: DashbordComponent },
     { path: 'admin', component: AdminComponent },
-  //path: '', redirectTo: '/login', pathMatch: 'full' },
-  //path: '**', redirectTo: '/login' } // Wildcard route for 404 pages
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '**', redirectTo: '/login' } // Wildcard route for 404 pages
 ];

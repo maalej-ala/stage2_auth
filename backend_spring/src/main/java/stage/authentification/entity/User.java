@@ -22,25 +22,30 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, columnDefinition = "varchar(255) default 'USER'")
-    private String role; // <-- Ajout du champ role
+    @Column(nullable = false)
+    private String role;
 
+    @Column(nullable = false)
+    private boolean active;
+
+    // Constructeurs
     public User() {}
-    public User(String firstName, String lastName, String email, String password, String role) {
+
+    public User(String firstName, String lastName, String email, String password, String role, boolean active) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.role = role;
-    }
-    public User(Long id, String firstName, String lastName, String email, String password, String role) {
-        this(firstName,lastName,email,password,role);
-
-    	this.id = id;
+        this.active = active;
     }
 
+    public User(Long id, String firstName, String lastName, String email, String password, String role, boolean active) {
+        this(firstName, lastName, email, password, role, active);
+        this.id = id;
+    }
 
-    // Getters and Setters
+    // Getters & Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -58,4 +63,7 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

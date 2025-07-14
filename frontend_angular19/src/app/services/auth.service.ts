@@ -31,6 +31,8 @@ export interface User {
   firstName: string;
   lastName: string;
   role?: string;
+  active: boolean; // ✅ nouveau champ
+
 }
 
 export interface UserCreateRequest {

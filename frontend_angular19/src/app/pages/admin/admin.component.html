@@ -1,5 +1,8 @@
 <div class="admin-container">
-  <h2>🔧 Admin - User Management</h2>
+  <div class="admin-header">
+    <h2>🔧 Admin - User Management</h2>
+    <button (click)="logout()" class="btn btn-logout">🚪 Se déconnecter</button>
+  </div>
 
   <div class="table-wrapper">
     <table class="user-table">
@@ -8,6 +11,7 @@
           <th>Nom Complet</th>
           <th>Email</th>
           <th>Rôle</th>
+          <th>Actif</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -41,7 +45,18 @@
               <option value="DOCTOR">DOCTOR</option>
             </select>
           </td>
-
+          <!---->
+<td *ngIf="editingUser?.id !== user.id">
+  <span [class]="user.active ? 'active-label' : 'inactive-label'">
+    {{ user.active ? '✅ Actif' : '⛔ Inactif' }}
+  </span>
+</td>
+<td *ngIf="editingUser?.id === user.id" class="edit-cell">
+  <select [(ngModel)]="editingUser!.active" class="active-select">
+    <option [value]="true">Actif</option>
+    <option [value]="false">Inactif</option>
+  </select>
+</td>
           <!-- Actions Column -->
           <td class="actions-cell">
             <div class="action-buttons">
