@@ -3,6 +3,7 @@ package stage.authentification.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -106,7 +107,9 @@ public class UserController {
         }
     }
 
-    @GetMapping("/users")
+    @GetMapping("/users")   
+    @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<List<User>> getAllUsers(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {

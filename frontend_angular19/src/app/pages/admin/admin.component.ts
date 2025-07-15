@@ -1,9 +1,10 @@
 // admin.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIf, NgFor } from '@angular/common';
 import { AuthService, User,  } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-admin',
@@ -15,10 +16,16 @@ import { AuthService, User,  } from '../../services/auth.service';
 export class AdminComponent implements OnInit {
   users: User[] = [];
   editingUser: User | null = null;
-
+private router = inject(Router);
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
+    if (!this.authService.hasRole('ADMIN')) {
+      alert('Accès non autorisé. Vous devez être administrateur pour accéder à cette page.');
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
     this.loadUsers();
   }
 
