@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, SignupRequest } from '../../services/auth.service';
@@ -12,16 +12,17 @@ import { AuthService, SignupRequest } from '../../services/auth.service';
   styleUrl: './signup.component.css'
 })
 export class SignupComponent {
+
+   private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private authService = inject(AuthService);
+
   signupForm: FormGroup;
   isLoading = false;
   errorMessage = '';
   successMessage = '';
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private authService: AuthService
-  ) {
+  constructor() {
     this.signupForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
@@ -153,7 +154,7 @@ export class SignupComponent {
 
   // Helper method to get display name for fields
   private getFieldDisplayName(fieldName: string): string {
-    const displayNames: { [key: string]: string } = {
+    const displayNames: Record<string, string> = {
       firstName: 'First name',
       lastName: 'Last name',
       email: 'Email',

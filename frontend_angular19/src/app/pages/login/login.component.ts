@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService, LoginRequest } from '../../services/auth.service';
@@ -12,16 +12,16 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private authService: AuthService
-  ) {
+  constructor() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -31,7 +31,12 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     // Check if user is already authenticated
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
+      // Redirect based on role
+      if (this.authService.hasRole('ADMIN')) {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
       return;
     }
 
@@ -62,16 +67,24 @@ export class LoginComponent implements OnInit {
         next: (response) => {
           console.log('Login successful!', response);
           
-          // Navigate to dashboard or intended route
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-          this.router.navigate([returnUrl]);
+          // Navigate based on role
+          if (this.authService.hasRole('ADMIN')) {
+            this.router.navigate(['/admin']);
+          } else {
+            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+            this.router.navigate([returnUrl]);
+          }
           
           this.isLoading = false;
         },
         error: (error) => {
           console.error('Login failed:', error);
-          this.errorMessage = error.message || 'Login failed. Please try again.';
-          this.isLoading = false;
+
+if (error.message.includes('Votre compte est désactivé')) {
+                    this.errorMessage = 'Votre compte est désactivé. Veuillez contacter l\'administrateur.';
+                } else {
+                    this.errorMessage = error.message || 'Identifiants incorrects. Veuillez réessayer.';
+                }
         }
       });
     } else {
