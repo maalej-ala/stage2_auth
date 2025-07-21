@@ -1,0 +1,97 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h2>🔧 Admin - User Management</h2>
+    <button (click)="logout()" class="btn btn-logout">🚪 Se déconnecter</button>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Nom Complet</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Actif</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users" [class.editing]="editingUser?.id === user.id">
+          <!-- Name Column -->
+          <td *ngIf="editingUser?.id !== user.id">{{ user.firstName }} {{ user.lastName }}</td>
+          <td *ngIf="editingUser?.id === user.id" class="edit-cell">
+            <div class="name-inputs">
+              <input [(ngModel)]="editingUser!.firstName" placeholder="Prénom" class="name-input" />
+              <input [(ngModel)]="editingUser!.lastName" placeholder="Nom" class="name-input" />
+            </div>
+          </td>
+
+          <!-- Email Column -->
+          <td *ngIf="editingUser?.id !== user.id">{{ user.email }}</td>
+          <td *ngIf="editingUser?.id === user.id" class="edit-cell">
+            <input [(ngModel)]="editingUser!.email" class="email-input" />
+          </td>
+
+          <!-- Role Column -->
+          <td *ngIf="editingUser?.id !== user.id">
+            <span class="role-badge" [class]="'role-' + (user.role?.toLowerCase() || 'unknown')">{{ user.role }}
+              
+            </span>
+          </td>
+          <td *ngIf="editingUser?.id === user.id" class="edit-cell">
+            <select [(ngModel)]="editingUser!.role" class="role-select">
+              <option value="USER">USER</option>
+              <option value="ADMIN">ADMIN</option>
+              <option value="DOCTOR">DOCTOR</option>
+            </select>
+          </td>
+          <!---->
+<td *ngIf="editingUser?.id !== user.id">
+  <span [class]="user.active ? 'active-label' : 'inactive-label'">
+    {{ user.active ? '✅ Actif' : '⛔ Inactif' }}
+  </span>
+</td>
+<td *ngIf="editingUser?.id === user.id" class="edit-cell">
+  <select [(ngModel)]="editingUser!.active" class="active-select">
+    <option [value]="true">Actif</option>
+    <option [value]="false">Inactif</option>
+  </select>
+</td>
+          <!-- Actions Column -->
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button 
+                *ngIf="editingUser?.id !== user.id" 
+                (click)="startEditing(user)"
+                class="btn btn-edit">
+                ✏️ Modifier
+              </button>
+              <button 
+                *ngIf="editingUser?.id === user.id" 
+                (click)="saveUserChanges()"
+                class="btn btn-save">
+                ✅ Sauvegarder
+              </button>
+              <button 
+                *ngIf="editingUser?.id === user.id" 
+                (click)="cancelEditing()"
+                class="btn btn-cancel">
+                ❌ Annuler
+              </button>
+              <button 
+                *ngIf="editingUser?.id !== user.id"
+                (click)="deleteUser(user.id)"
+                class="btn btn-delete">
+                🗑️ Supprimer
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="users-count">
+    Total: {{ users.length }} utilisateur(s)
+  </div>
+</div>

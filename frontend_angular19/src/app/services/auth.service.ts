@@ -1,5 +1,5 @@
 // auth.service.ts
-import { Injectable } from '@angular/core';
+import { Injectable ,inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { catchError, tap, switchMap } from 'rxjs/operators';
@@ -31,6 +31,8 @@ export interface User {
   firstName: string;
   lastName: string;
   role?: string;
+  active: boolean; // ✅ nouveau champ
+
 }
 
 export interface UserCreateRequest {
@@ -40,6 +42,14 @@ export interface UserCreateRequest {
   password: string;
   role: 'USER' | 'ADMIN' | 'DOCTOR';
 }
+export interface UserCreateResponse {
+  message: string;
+  user: User;
+  token: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -56,13 +66,58 @@ export class AuthService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasValidToken());
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {
-    this.checkTokenValidity();
-  }
+  private http = inject(HttpClient);
+  private router = inject(Router);
+constructor() {
+  this.checkTokenValidity();
+}
 
+getAllUsers(): Observable<User[]> {
+    return this.ensureValidToken().pipe(
+      switchMap(() => {
+        const token = this.getToken();
+        const headers = token
+          ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+          : new HttpHeaders();
+
+        return this.http.get<User[]>(`${this.API_URL}/users`, { headers }).pipe(
+          catchError(this.handleError)
+        );
+      })
+    );
+  }
+  // auth.service.ts
+// Add these methods to the existing AuthService class
+
+updateUser(userData: User): Observable<any> {
+  return this.ensureValidToken().pipe(
+    switchMap(() => {
+      const token = this.getToken();
+      const headers = token
+        ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+        : new HttpHeaders();
+
+      return this.http.put(`${this.API_URL}/users/${userData.id}`, userData, { headers }).pipe(
+        catchError(this.handleError)
+      );
+    })
+  );
+}
+
+deleteUser(userId: string): Observable<any> {
+  return this.ensureValidToken().pipe(
+    switchMap(() => {
+      const token = this.getToken();
+      const headers = token
+        ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+        : new HttpHeaders();
+
+      return this.http.delete(`${this.API_URL}/users/${userId}`, { headers }).pipe(
+        catchError(this.handleError)
+      );
+    })
+  );
+}
   /**
    * Check token validity and refresh if needed before making a request
    */
@@ -115,20 +170,20 @@ export class AuthService {
   /**
    * Create user (for testing)
    */
-  createUser(userData: UserCreateRequest): Observable<any> {
-    return this.ensureValidToken().pipe(
-      switchMap(() => {
-        const token = this.getToken();
-        const headers = token
-          ? new HttpHeaders({ Authorization: `Bearer ${token}` })
-          : new HttpHeaders();
+ createUser(userData: UserCreateRequest): Observable<UserCreateResponse> {
+  return this.ensureValidToken().pipe(
+    switchMap(() => {
+      const token = this.getToken();
+      const headers = token
+        ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+        : new HttpHeaders();
 
-        return this.http.post(`${this.API_URL}/create`, userData, { headers }).pipe(
-          catchError(this.handleError)
-        );
-      })
-    );
-  }
+      return this.http.post<UserCreateResponse>(`${this.API_URL}/create`, userData, { headers }).pipe(
+        catchError(this.handleError)
+      );
+    })
+  );
+}
 
   /**
    * Logout user

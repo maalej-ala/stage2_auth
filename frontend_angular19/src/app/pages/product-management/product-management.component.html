@@ -1,0 +1,52 @@
+<div class="container">
+    <h1>Product Management System</h1>
+    <button class="btn btn-secondary" (click)="goToDash()">dashboard</button>
+
+    <!-- Form Section -->
+    <div class="form-section">
+        <h2 id="formTitle">{{ isEditing ? 'Edit Product' : 'Add New Product' }}</h2>
+        
+        <div id="errorMessage" class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div id="successMessage" class="success" *ngIf="successMessage">{{ successMessage }}</div>
+        
+        <form #productForm="ngForm" (ngSubmit)="handleSubmit(productForm)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Product Name*</label>
+                    <input type="text" id="name" name="name" [(ngModel)]="product.name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="price">Price*</label>
+                    <input type="number" id="price" name="price" [(ngModel)]="product.price" step="0.01" min="0" required>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" id="cancelBtn" class="btn btn-secondary" *ngIf="isEditing" (click)="cancelEdit()">Cancel</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary" [disabled]="!productForm.valid">{{ isEditing ? 'Update Product' : 'Add Product' }}</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Products List -->
+    <div class="form-section">
+        <h2>Products List</h2>
+        <div id="loadingMessage" class="loading" *ngIf="isLoading">Loading products...</div>
+        <div id="productsContainer" class="products-grid">
+            <div *ngIf="products.length === 0 && !isLoading">
+                <p style="text-align: center; color: #666; padding: 20px;">No products found.</p>
+            </div>
+            <div class="product-card" *ngFor="let product of products">
+                <h3>{{ product.name || 'Unnamed Product' }}</h3>
+                <div class="product-info">
+                    <p><strong>Price:</strong> ${{ (product.price || 0).toFixed(2) }}</p>
+                </div>
+                <div class="product-actions">
+                    <button class="btn btn-success" (click)="editProduct(product)">Edit</button>
+                    <button class="btn btn-danger" *ngIf="product.id" (click)="deleteProduct(product.id)">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

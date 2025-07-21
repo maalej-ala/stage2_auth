@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { UserCreateRequest,AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 interface StatCard {
   title: string;
@@ -29,8 +30,10 @@ interface RecentActivity {
   templateUrl: './dashbord.component.html',
   styleUrls: ['./dashbord.component.css']
 })
-export class DashbordComponent implements OnInit {
-  constructor(private authService: AuthService) {}
+export class DashbordComponent {
+    private authService = inject(AuthService);
+  private router = inject(Router);
+
 
 
   Math = Math;
@@ -68,7 +71,7 @@ export class DashbordComponent implements OnInit {
 
   chartPoints: ChartPoint[] = [
     { x: 0, y: 180 },
-    { x: 50, y: 160 },
+    { x: 50, y: 160 },  
     { x: 100, y: 140 },
     { x: 150, y: 120 },
     { x: 200, y: 100 },
@@ -108,10 +111,9 @@ export class DashbordComponent implements OnInit {
       status: 'warning'
     }
   ];
-
-  ngOnInit(): void {
-    // Initialize component
-  }
+goToProduct(){
+  this.router.navigate(['/products']);
+}
 onNewReport() {
     // Call logout from AuthService
     this.authService.logout();
